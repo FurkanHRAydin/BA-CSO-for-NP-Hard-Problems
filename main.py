@@ -45,7 +45,7 @@ def run_cso(num_cats, num_dimensions, iterations, smp, srd, c1):
     best_cat = min(cats, key=lambda x: calculate_fitness(x.position))
 
     # Ausführen der Simulation für eine gegebene Anzahl von Iterationen
-    for _ in range(iterations):
+    for iteration in range(iterations):
         for cat in cats:
             if random.random() < 0.5:
                 seeking_mode(cat, smp, srd)
@@ -56,6 +56,11 @@ def run_cso(num_cats, num_dimensions, iterations, smp, srd, c1):
             if calculate_fitness(cat.position) < calculate_fitness(best_cat.position):
                 best_cat = cat
 
+        # Ausgabe der besten Katze und deren Fitnesswert nach jeder Iteration
+        best_fitness = calculate_fitness(best_cat.position)
+        formatted_position = [round(x, 2) for x in best_cat.position]
+        print(f"Iteration {iteration + 1}: Beste Position = {formatted_position}, Fitness = {round(best_fitness, 2)}")
+
     return best_cat.position
 
 
@@ -65,10 +70,11 @@ def main():
     iterations = 100
     smp = 5  # Anzahl der Suchversuche im Seeking Mode
     srd = 1.0  # Suchradius für den Seeking Mode
-    c1 = 2.0  # Beschleunigungsfaktor für den Tracing-Mode
+    c1 = 2.0  # Beschleunigungsfaktor für den TracingMode
 
     best_position = run_cso(num_cats, num_dimensions, iterations, smp, srd, c1)
-    print("Beste gefundene Position:", best_position)
+    formatted_best_position = [round(x, 2) for x in best_position]
+    print("Endgültig beste gefundene Position:", formatted_best_position)
 
 
 if __name__ == "__main__":
