@@ -1,80 +1,79 @@
 import random
+import matplotlib.pyplot as plt
+from SeekinMode import SeekingMode
+from TracingMode import TracingMode
+from Cat import Cat
 
 
-class Cat:
-    def __init__(self, num_dimensions):
-        # Zufällige Anfangsposition und anfängliche Geschwindigkeit von null
-        self.position = [random.uniform(-10, 10) for _ in range(num_dimensions)]
-        self.velocity = [0.0 for _ in range(num_dimensions)]
+class CSO:
+    def __init__(self, num_cats, num_dimensions, smp, spc, srd, c1, velocity_limit, mr):
+        self.num_cats = num_cats
+        self.num_dimensions = num_dimensions
+        self.cats = []
+        for i in range(num_cats):
+            self.cats.append(Cat(num_dimensions))
+        self.seeking_mode = SeekingMode(smp, spc, srd)
+        self.tracing_mode = TracingMode(c1, velocity_limit)
+        self.mr = mr
+        self.fitness_history = []
 
-    def update_position(self):
-        # Aktualisiere die Position der Katze basierend auf der Geschwindigkeit
-        self.position = [self.position[i] + self.velocity[i] for i in range(len(self.position))]
+    @staticmethod
+    def evaluate_fitness(cat):
+        total = 0
+        for coord in cat.position:
+            total += coord ** 2
+        return total
 
-
-def calculate_fitness(position):
-    # Berechne die Fitness als die Summe der Quadrate der Positionskoordinaten
-    return sum(x ** 2 for x in position)
-
-
-def seeking_mode(cat, smp, srd):
-    best_position = cat.position[:]
-    best_fitness = calculate_fitness(cat.position)
-
-    # Erzeuge mehrere Kandidaten um die aktuelle Position und wähle den besten aus
-    for _ in range(smp):
-        candidate_position = [p + random.uniform(-srd, srd) for p in cat.position]
-        candidate_fitness = calculate_fitness(candidate_position)
-        if candidate_fitness < best_fitness:
-            best_fitness = candidate_fitness
-            best_position = candidate_position[:]
-
-    cat.position = best_position
-
-
-def tracing_mode(cat, best_position, c1):
-    # Passe die Geschwindigkeit an, um der besten bekannten Position zu folgen
-    for i in range(len(cat.position)):
-        r1 = random.random()
-        cat.velocity[i] += c1 * r1 * (best_position[i] - cat.position[i])
-
-
-def run_cso(num_cats, num_dimensions, iterations, smp, srd, c1):
-    # Erstelle einen Schwarm von Katzen
-    cats = [Cat(num_dimensions) for _ in range(num_cats)]
-    best_cat = min(cats, key=lambda x: calculate_fitness(x.position))
-
-    # Ausführen der Simulation für eine gegebene Anzahl von Iterationen
-    for iteration in range(iterations):
-        for cat in cats:
-            if random.random() < 0.5:
-                seeking_mode(cat, smp, srd)
+    def run_iteration(self):
+        for cat in self.cats:
+            if random.random() < self.mr:
+                # Cat is in seeking mode
+                modified_positions = self.seeking_mode.create_and_modify_positions(cat.position)
+                fitness_scores = []
+                for pos in modified_positions:
+                    fitness = self.seeking_mode.calculate_fitness(pos)
+                    fitness_scores.append(fitness)
+                selection_probabilities = self.seeking_mode.calculate_selection_probabilities(fitness_scores)
+                selected_index = random.choices(range(len(modified_positions)), weights=selection_probabilities, k=1)[
+                    0]  # Extrahiere den korrekten Index aus der Liste
+                cat.position = modified_positions[selected_index]
             else:
-                tracing_mode(cat, best_cat.position, c1)
-            cat.update_position()
-            # Finde neue beste Katze, wenn möglich
-            if calculate_fitness(cat.position) < calculate_fitness(best_cat.position):
-                best_cat = cat
+                # Cat is in tracing mode
+                best_cat = min(self.cats, key=lambda c: c.fitness)
+                cat.velocity = self.tracing_mode.update_velocity(cat.position, best_cat.position, cat.velocity)
+                cat.position = self.tracing_mode.update_position(cat.position, cat.velocity)
 
-        # Ausgabe der besten Katze und deren Fitnesswert nach jeder Iteration
-        best_fitness = calculate_fitness(best_cat.position)
-        formatted_position = [round(x, 2) for x in best_cat.position]
-        print(f"Iteration {iteration + 1}: Beste Position = {formatted_position}, Fitness = {round(best_fitness, 2)}")
+            # Evaluate fitness
+            cat.fitness = self.evaluate_fitness(cat)
+            self.fitness_history.append(min(cat.fitness for cat in self.cats))
 
-    return best_cat.position
+    def optimize(self, iterations):
+        for iteration in range(iterations):
+            self.run_iteration()
+            # Print best cat's position and fitness after each iteration
+            best_cat = min(self.cats, key=lambda c: c.fitness)
+            print(f"Iteration {iteration + 1}: Best Position = {best_cat.position}, Fitness = {best_cat.fitness}")
+
+    def plot_fitness(self):
+        plt.figure(figsize=(10, 5))
+        plt.plot(self.fitness_history, label='Best Fitness per Iteration')
+        plt.xlabel('Iteration')
+        plt.ylabel('Fitness')
+        plt.title('Fitness Development Over Iterations')
+        plt.legend()
+        plt.grid(True)
+        plt.xlim(0, len(self.fitness_history) - 1)  # Begrenze die x-Achse auf die Anzahl der Iterationen
+        plt.ylim(0, max(self.fitness_history) * 1.1)  # Optionale Anpassung der y-Achse
+        plt.show()
 
 
 def main():
-    num_cats = 10
-    num_dimensions = 5
-    iterations = 100
-    smp = 5  # Anzahl der Suchversuche im Seeking Mode
-    srd = 1.0  # Suchradius für den Seeking Mode
-    c1 = 2.0  # Beschleunigungsfaktor für den TracingMode
-
-    best_position = run_cso(num_cats, num_dimensions, iterations, smp, srd, c1)
-    formatted_best_position = [round(x, 2) for x in best_position]
-    print("Endgültig beste gefundene Position:", formatted_best_position)
+    num_cats = 100
+    num_dimensions = 3
+    iterations = 10
+    cso = CSO(num_cats, num_dimensions, smp=5, spc=True, srd=0.1, c1=0.2, velocity_limit=0.3, mr=0.5)
+    cso.optimize(iterations)
+    cso.plot_fitness()
 
 
 if __name__ == "__main__":
