@@ -24,4 +24,3 @@ class TracingMode:
         for d in range(num_dimensions):
             position[d] += velocity[d]
         return position
-

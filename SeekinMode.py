@@ -7,13 +7,6 @@ class SeekingMode:
         self.spc = spc
         self.srd = srd
 
-    @staticmethod
-    def calculate_fitness(position):
-        total = 0
-        for coord in position:
-            total += coord ** 2
-        return total
-
     def create_and_modify_positions(self, current_position):
         copies = []
         num_copies = self.smp if self.spc else self.smp - 1
@@ -54,4 +47,3 @@ class SeekingMode:
     def choose_new_position(modified_copies, selection_probabilities):
         chosen_index = random.choices(range(len(modified_copies)), weights=selection_probabilities, k=1)[0]
         return modified_copies[chosen_index]
-
