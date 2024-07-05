@@ -17,8 +17,11 @@ class CSO:
         self.tracing_mode = TracingMode(c1, velocity_limit)
         self.mr = mr
         self.fitness_history = []
+        self.best_global_fitness = float('inf')  # Beste globale Fitness initialisieren
+        self.best_global_position = None  # Beste globale Position initialisieren
 
     def run_iteration(self):
+        counter = 0
         for cat in self.cats:
             if random.random() < self.mr:
                 # Cat is in seeking mode
@@ -39,14 +42,23 @@ class CSO:
 
             # Evaluate fitness
             cat.fitness = Fitness.evaluate_fitness(cat)
-            self.fitness_history.append(min(cat.fitness for cat in self.cats))
+
+            counter = counter + 1
+            print(f"Cat {counter}: Position = {cat.position}, Fitness = {cat.fitness}")
+
+        best_cat = min(self.cats, key=Fitness.get_fitness)
+        if best_cat.fitness < self.best_global_fitness:
+            self.best_global_fitness = best_cat.fitness
+            self.best_global_position = best_cat.position[:]
+
+        self.fitness_history.append(self.best_global_fitness)
+        print(f"End of Iteration: Best Position = {best_cat.position}, Fitness = {best_cat.fitness}")
 
     def optimize(self, iterations):
         for iteration in range(iterations):
+            print(f"Start of Iteration {iteration + 1}")
             self.run_iteration()
-            # Print best cat's position and fitness after each iteration
-            best_cat = min(self.cats, key=Fitness.get_fitness)
-            print(f"Iteration {iteration + 1}: Best Position = {best_cat.position}, Fitness = {best_cat.fitness}")
+            print(f"End of Iteration {iteration + 1}")
 
     def plot_fitness(self):
         plt.figure(figsize=(10, 5))
@@ -59,3 +71,7 @@ class CSO:
         plt.xlim(0, len(self.fitness_history) - 1)  # Begrenze die x-Achse auf die Anzahl der Iterationen
         plt.ylim(0, max(self.fitness_history) * 1.1)  # Optionale Anpassung der y-Achse
         plt.show()
+
+    def report_best_global(self):
+        print(f"Best global fitness achieved: {self.best_global_fitness}")
+        print(f"Position of best global fitness: {self.best_global_position}")
