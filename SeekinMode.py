@@ -7,23 +7,35 @@ class SeekingMode:
         self.spc = spc
         self.srd = srd
 
-    def create_and_modify_positions(self, current_position):
+    def create_and_modify_positions(self, current_schedule):
         copies = []
         num_copies = self.smp if self.spc else self.smp - 1
-        for i in range(num_copies):
-            copies.append(current_position[:])  # Erstellen einer Kopie der aktuellen Position
+        for _ in range(num_copies):
+            copies.append([
+                [{shift_type: shift.copy() for shift_type, shift in day.items()} for day in nurse_schedule]
+                for nurse_schedule in current_schedule
+            ])
 
         if self.spc:
-            copies.append(current_position[:])  # Hinzufügen der aktuellen Position, wenn spc wahr ist
+            copies.append([
+                [{shift_type: shift.copy() for shift_type, shift in day.items()} for day in nurse_schedule]
+                for nurse_schedule in current_schedule
+            ])
 
         modified_copies = []
-        for i in range(len(copies)):
-            copy = copies[i]
+        for copy in copies:
             modified_copy = []
-            for j in range(len(copy)):
-                coord = copy[j]
-                modified_coord = coord * (1 + random.uniform(-self.srd, self.srd))
-                modified_copy.append(modified_coord)
+            for nurse_schedule in copy:
+                modified_nurse_schedule = []
+                for day in nurse_schedule:
+                    modified_day = {}
+                    for shift_type, shift in day.items():
+                        modified_shift = shift.copy()
+                        if random.random() < self.srd:
+                            modified_shift['assigned'] = 1 - shift['assigned']  # Schichtzuweisung ändern
+                        modified_day[shift_type] = modified_shift
+                    modified_nurse_schedule.append(modified_day)
+                modified_copy.append(modified_nurse_schedule)
             modified_copies.append(modified_copy)
 
         return modified_copies
@@ -34,11 +46,10 @@ class SeekingMode:
         min_fitness = min(fitness_scores)
         probabilities = []
         if max_fitness == min_fitness:
-            for i in range(len(fitness_scores)):
+            for _ in fitness_scores:
                 probabilities.append(1.0)
         else:
-            for i in range(len(fitness_scores)):
-                fitness = fitness_scores[i]
+            for fitness in fitness_scores:
                 probability = (abs(fitness - max_fitness) / (max_fitness - min_fitness))
                 probabilities.append(probability)
         return probabilities
