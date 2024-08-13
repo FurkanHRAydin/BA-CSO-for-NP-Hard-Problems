@@ -1,4 +1,5 @@
 import random
+from Nurse import Nurse
 
 
 class SeekingMode:
@@ -7,26 +8,26 @@ class SeekingMode:
         self.spc = spc
         self.srd = srd
 
-    def create_and_modify_positions(self, current_position):
-        copies = []
-        num_copies = self.smp if self.spc else self.smp - 1
-        for i in range(num_copies):
-            copies.append(current_position[:])  # Erstellen einer Kopie der aktuellen Position
+    def create_and_modify_positions(self, nurses):
+        modified_positions = []
+        for _ in range(self.smp):
+            new_nurses = []
+            for nurse in nurses:
+                new_schedule = nurse.schedule[:]
+                if random.random() < self.srd:
+                    for i in range(len(new_schedule)):
+                        new_schedule[i] = random.choice(['Früh', 'Spät', 'Nacht', 'None'])
+                new_nurses.append(new_schedule)
+            modified_positions.append(new_nurses)
 
         if self.spc:
-            copies.append(current_position[:])  # Hinzufügen der aktuellen Position, wenn spc wahr ist
+            modified_positions.append([nurse.schedule[:] for nurse in nurses])
 
-        modified_copies = []
-        for i in range(len(copies)):
-            copy = copies[i]
-            modified_copy = []
-            for j in range(len(copy)):
-                coord = copy[j]
-                modified_coord = coord * (1 + random.uniform(-self.srd, self.srd))
-                modified_copy.append(modified_coord)
-            modified_copies.append(modified_copy)
+        # Debugging: Überprüfe, ob gültige Positionen erstellt wurden
+        if not modified_positions:
+            print("Fehler: Keine gültigen Positionen wurden erstellt.")
 
-        return modified_copies
+        return modified_positions
 
     @staticmethod
     def calculate_selection_probabilities(fitness_scores):

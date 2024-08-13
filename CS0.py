@@ -1,77 +1,108 @@
-import random
 import matplotlib.pyplot as plt
+import random
+from Cat import Cat
 from SeekinMode import SeekingMode
 from TracingMode import TracingMode
-from Cat import Cat
 from Fitness import Fitness
+from Nurse import Nurse
 
 
 class CSO:
-    def __init__(self, num_cats, num_dimensions, smp, spc, srd, c1, velocity_limit, mr):
+    def __init__(self, num_cats, num_days, shifts, smp, spc, srd, c1, velocity_limit, mr):
         self.num_cats = num_cats
-        self.num_dimensions = num_dimensions
+        self.num_days = num_days
+        self.shifts = shifts
+
+        benchmark_nurses = [
+            {'name': 'Anna', 'availability': ['Früh', 'Spät', 'Nacht', 'None'], 'preferences': ['Früh']},
+            {'name': 'Ben', 'availability': ['Früh', 'Spät', 'None'], 'preferences': ['Spät']},
+            {'name': 'Carla', 'availability': ['Früh', 'None', 'Nacht'], 'preferences': ['Nacht']},
+            {'name': 'Dave', 'availability': ['Früh', 'Spät', 'Nacht'], 'preferences': ['Spät']},
+            {'name': 'Eva', 'availability': ['Früh', 'None', 'Nacht'], 'preferences': ['Nacht']}
+        ]
+
         self.cats = []
-        for i in range(num_cats):
-            self.cats.append(Cat(num_dimensions))
+        for _ in range(num_cats):
+            nurses = [Nurse(nurse['name'], num_days, nurse['availability'], nurse['preferences'])
+                      for nurse in benchmark_nurses]
+            self.cats.append(Cat(nurses))
+
         self.seeking_mode = SeekingMode(smp, spc, srd)
         self.tracing_mode = TracingMode(c1, velocity_limit)
         self.mr = mr
-        self.fitness_history = []
-        self.best_global_fitness = float('inf')  # Beste globale Fitness initialisieren
-        self.best_global_position = None  # Beste globale Position initialisieren
+        self.best_global_fitness = float('inf')
+        self.best_global_position = [nurse.schedule[:] for nurse in self.cats[0].nurses]
+        self.global_fitness_history = []
+        self.iteration_best_fitness = []
+        self.cat_fitness_history = []
 
-    def run_iteration(self):
-        counter = 0
-        for cat in self.cats:
+    def run_iteration(self, iteration):
+        best_fitness_in_iteration = float('inf')
+        iteration_fitness = []
+
+        for index, cat in enumerate(self.cats):
             if random.random() < self.mr:
-                # Cat is in seeking mode
-                modified_positions = self.seeking_mode.create_and_modify_positions(cat.position)
-                fitness_scores = []
-                for pos in modified_positions:
-                    fitness = Fitness.calculate_fitness(pos)
-                    fitness_scores.append(fitness)
-                selection_probabilities = self.seeking_mode.calculate_selection_probabilities(fitness_scores)
-                selected_index = random.choices(range(len(modified_positions)), weights=selection_probabilities, k=1)[
-                    0]  # Extrahiere den korrekten Index aus der Liste
-                cat.position = modified_positions[selected_index]
+                modified_positions = self.seeking_mode.create_and_modify_positions(cat.nurses)
+                fitness_scores = [Fitness.calculate_fitness(pos, self.shifts, self.num_days) for pos in
+                                  modified_positions]
+                best_position = modified_positions[fitness_scores.index(min(fitness_scores))]
+                cat.update_position(best_position)
             else:
-                # Cat is in tracing mode
-                best_cat = min(self.cats, key=Fitness.get_fitness)
-                cat.velocity = self.tracing_mode.update_velocity(cat.position, best_cat.position, cat.velocity)
-                cat.position = self.tracing_mode.update_position(cat.position, cat.velocity)
+                best_position = self.best_global_position
+                cat.velocity = self.tracing_mode.update_velocity(cat.nurses, best_position, cat.velocity)
+                new_positions = self.tracing_mode.update_position(cat.nurses, cat.velocity)
+                cat.update_position(new_positions)
 
-            # Evaluate fitness
-            cat.fitness = Fitness.evaluate_fitness(cat)
+            cat.fitness = Fitness.calculate_fitness(cat.nurses, self.shifts, self.num_days)
+            iteration_fitness.append(cat.fitness)
+            print(f"Iteration {iteration + 1}, Cat {index + 1} Fitness: {cat.fitness}")
 
-            counter = counter + 1
-            print(f"Cat {counter}: Position = {cat.position}, Fitness = {cat.fitness}")
+            if cat.fitness < best_fitness_in_iteration:
+                best_fitness_in_iteration = cat.fitness
 
-        best_cat = min(self.cats, key=Fitness.get_fitness)
-        if best_cat.fitness < self.best_global_fitness:
-            self.best_global_fitness = best_cat.fitness
-            self.best_global_position = best_cat.position[:]
+            if cat.fitness < self.best_global_fitness:
+                print(f"New Global Best Fitness found by Cat {index + 1}: {cat.fitness}")
+                self.best_global_fitness = cat.fitness
+                self.best_global_position = [nurse.schedule[:] for nurse in cat.nurses]
 
-        self.fitness_history.append(self.best_global_fitness)
-        print(f"End of Iteration: Best Position = {best_cat.position}, Fitness = {best_cat.fitness}")
+        self.iteration_best_fitness.append(best_fitness_in_iteration)
+        self.global_fitness_history.append(self.best_global_fitness)
+        self.cat_fitness_history.append(iteration_fitness)
+
+        print(f"Best Fitness in Iteration {iteration + 1}: {best_fitness_in_iteration}")
+        print(f"Global Best Fitness after Iteration {iteration + 1}: {self.best_global_fitness}\n")
 
     def optimize(self, iterations):
         for iteration in range(iterations):
             print(f"Start of Iteration {iteration + 1}")
-            self.run_iteration()
-            print(f"End of Iteration {iteration + 1}")
+            self.run_iteration(iteration)
+            print(f"End of Iteration {iteration + 1}\n")
 
     def plot_fitness(self):
+        # Plot für den globalen besten Fitnesswert und den besten Fitnesswert pro Iteration
         plt.figure(figsize=(10, 5))
-        plt.plot(self.fitness_history, label='Best Fitness per Iteration')
+        plt.plot(range(1, len(self.global_fitness_history) + 1), self.global_fitness_history,
+                 label='Best Global Fitness per Iteration', color='blue')
+        plt.plot(range(1, len(self.iteration_best_fitness) + 1), self.iteration_best_fitness,
+                 label='Best Fitness per Iteration', color='red')
         plt.xlabel('Iteration')
         plt.ylabel('Fitness')
         plt.title('Fitness Development Over Iterations')
         plt.legend()
         plt.grid(True)
-        plt.xlim(0, len(self.fitness_history) - 1)  # Begrenze die x-Achse auf die Anzahl der Iterationen
-        plt.ylim(0, max(self.fitness_history) * 1.1)  # Optionale Anpassung der y-Achse
+        plt.xlim(1, len(self.global_fitness_history))
+        plt.ylim(0, max(self.global_fitness_history) * 1.1)
         plt.show()
 
     def report_best_global(self):
         print(f"Best global fitness achieved: {self.best_global_fitness}")
-        print(f"Position of best global fitness: {self.best_global_position}")
+        print(f"Best found schedule:")
+
+        for i, nurse_schedule in enumerate(self.best_global_position):
+            nurse_name = ['Anna', 'Ben', 'Carla', 'Dave', 'Eva'][i]
+            print(f"{nurse_name}: {nurse_schedule}")
+
+        # Zusätzliche Ausgabe zur Überprüfung
+        print("\nDetailed Schedule:")
+        for nurse_schedule in self.best_global_position:
+            print(nurse_schedule)
