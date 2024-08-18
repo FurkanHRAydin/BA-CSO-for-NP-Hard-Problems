@@ -10,6 +10,10 @@ class TracingMode:
         self.velocity_limit = velocity_limit
 
     def update_velocity(self, current_nurses, best_position, velocity):
+        """
+        Aktualisiert die Geschwindigkeit der Krankenschwestern in der aktuellen Position,
+        basierend auf der besten gefundenen Position.
+        """
         # Verwende größere Faktoren, um stärkere Änderungen zu erzwingen
         new_velocity = velocity.copy()
         for i in range(len(current_nurses)):
@@ -22,6 +26,9 @@ class TracingMode:
         return new_velocity
 
     def update_position(self, current_nurses, velocity):
+        """
+        Aktualisiert die Positionen der Krankenschwestern basierend auf der aktuellen Geschwindigkeit.
+        """
         num_nurses = len(current_nurses)
         new_positions = []
         for i in range(num_nurses):

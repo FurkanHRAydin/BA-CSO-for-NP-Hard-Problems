@@ -14,21 +14,24 @@ class CSO:
         self.shifts = shifts
 
         benchmark_nurses = [
-            {'name': 'Anna', 'availability': ['Früh', 'Spät', 'Nacht', 'None'], 'preferences': ['Früh']},
-            {'name': 'Ben', 'availability': ['Früh', 'Spät', 'None'], 'preferences': ['Spät']},
-            {'name': 'Carla', 'availability': ['Früh', 'None', 'Nacht'], 'preferences': ['Nacht']},
-            {'name': 'Dave', 'availability': ['Früh', 'Spät', 'Nacht'], 'preferences': ['Spät']},
-            {'name': 'Eva', 'availability': ['Früh', 'None', 'Nacht'], 'preferences': ['Nacht']}
+            {'name': 'Anna', 'availability': ['Früh', 'Spät', 'Nacht', 'None'], 'preferences': ['Früh'],
+             'skills': ['Skill1']},
+            {'name': 'Ben', 'availability': ['Früh', 'Spät', 'None'], 'preferences': ['Spät'], 'skills': ['Skill2']},
+            {'name': 'Carla', 'availability': ['Früh', 'None', 'Nacht'], 'preferences': ['Nacht'],
+             'skills': ['Skill3']},
+            {'name': 'Dave', 'availability': ['Früh', 'Spät', 'Nacht'], 'preferences': ['Spät'],
+             'skills': ['Skill1', 'Skill3']},
+            {'name': 'Eva', 'availability': ['Früh', 'None', 'Nacht'], 'preferences': ['Nacht'], 'skills': ['Skill2']}
         ]
 
         self.cats = []
         for _ in range(num_cats):
-            nurses = [Nurse(nurse['name'], num_days, nurse['availability'], nurse['preferences'])
+            nurses = [Nurse(nurse['name'], num_days, nurse['availability'], nurse['preferences'], nurse['skills'])
                       for nurse in benchmark_nurses]
             self.cats.append(Cat(nurses))
 
-        self.seeking_mode = SeekingMode(smp, spc, srd)
-        self.tracing_mode = TracingMode(c1, velocity_limit)
+        self.seeking_mode = SeekingMode(smp, spc, srd)  # Initialisierung des SeekingMode
+        self.tracing_mode = TracingMode(c1, velocity_limit)  # Initialisierung des TracingMode
         self.mr = mr
         self.best_global_fitness = float('inf')
         self.best_global_position = [nurse.schedule[:] for nurse in self.cats[0].nurses]
@@ -41,13 +44,13 @@ class CSO:
         iteration_fitness = []
 
         for index, cat in enumerate(self.cats):
-            if random.random() < self.mr:
+            if random.random() < self.mr:  # **SEEKING MODE** wird ausgewählt
                 modified_positions = self.seeking_mode.create_and_modify_positions(cat.nurses)
                 fitness_scores = [Fitness.calculate_fitness(pos, self.shifts, self.num_days) for pos in
                                   modified_positions]
                 best_position = modified_positions[fitness_scores.index(min(fitness_scores))]
                 cat.update_position(best_position)
-            else:
+            else:  # **TRACING MODE** wird ausgewählt
                 best_position = self.best_global_position
                 cat.velocity = self.tracing_mode.update_velocity(cat.nurses, best_position, cat.velocity)
                 new_positions = self.tracing_mode.update_position(cat.nurses, cat.velocity)

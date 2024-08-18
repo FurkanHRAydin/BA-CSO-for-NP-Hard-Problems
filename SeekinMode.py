@@ -9,6 +9,9 @@ class SeekingMode:
         self.srd = srd
 
     def create_and_modify_positions(self, nurses):
+        """
+        Erzeugt neue Positionen (Schichtpläne) durch Modifikation der aktuellen Positionen.
+        """
         modified_positions = []
         for _ in range(self.smp):
             new_nurses = []
@@ -31,6 +34,9 @@ class SeekingMode:
 
     @staticmethod
     def calculate_selection_probabilities(fitness_scores):
+        """
+        Berechnet die Auswahlwahrscheinlichkeiten basierend auf den Fitnesswerten der Positionen.
+        """
         max_fitness = max(fitness_scores)
         min_fitness = min(fitness_scores)
         probabilities = []
@@ -46,5 +52,8 @@ class SeekingMode:
 
     @staticmethod
     def choose_new_position(modified_copies, selection_probabilities):
+        """
+        Wählt eine neue Position aus den modifizierten Kopien basierend auf den Auswahlwahrscheinlichkeiten.
+        """
         chosen_index = random.choices(range(len(modified_copies)), weights=selection_probabilities, k=1)[0]
         return modified_copies[chosen_index]

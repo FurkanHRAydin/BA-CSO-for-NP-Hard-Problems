@@ -8,6 +8,7 @@ class Fitness:
         single_assignment_penalty = 50
         preference_penalty = 20  # Strafpunkte für die Nichtberücksichtigung von Präferenzen
         availability_penalty = 50  # Strafpunkte für Zuweisungen außerhalb der Verfügbarkeit
+        skill_mismatch_penalty = 30  # Strafpunkte für fehlende erforderliche Fähigkeiten
         total_penalty = 0
 
         for day in range(num_days):
@@ -29,6 +30,12 @@ class Fitness:
                 # Überprüfen, ob die Schicht innerhalb der Verfügbarkeit ist
                 if shift_name != 'None' and isinstance(nurse, Nurse) and shift_name not in nurse.availability:
                     total_penalty += availability_penalty
+
+                # Überprüfen, ob die Krankenschwester die erforderlichen Fähigkeiten für die Schicht hat
+                if shift_name != 'None' and isinstance(nurse, Nurse):
+                    assigned_shift = next((shift for shift in shifts if shift.name == shift_name), None)
+                    if assigned_shift and assigned_shift.required_skill and assigned_shift.required_skill not in nurse.skills:
+                        total_penalty += skill_mismatch_penalty
 
                 if shift_name != 'None':
                     for shift in shifts:

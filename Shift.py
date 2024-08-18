@@ -1,8 +1,9 @@
 class Shift:
-    def __init__(self, name, min_required):
+    def __init__(self, name, min_required, required_skill=None):
         self.name = name
         self.min_required = min_required  # Minimale Anforderung an Krankenschwestern
         self.assigned_nurses = []
+        self.required_skill = required_skill  # Neuer Parameter für erforderliche Fähigkeiten
 
     def add_nurse(self, nurse):
         """
