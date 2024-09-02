@@ -22,6 +22,7 @@ class TracingMode:
                         shift_to_num[best_position[i][day]] - shift_to_num[current_nurses[i].schedule[day]]
                 )
                 new_velocity[i][day] += change
+                # Überprüfen, ob die Geschwindigkeit innerhalb der Grenzen liegt
                 new_velocity[i][day] = max(min(new_velocity[i][day], self.velocity_limit), -self.velocity_limit)
         return new_velocity
 
@@ -35,7 +36,8 @@ class TracingMode:
             new_schedule = current_nurses[i].schedule[:]
             for day in range(len(new_schedule)):
                 shift_num = shift_to_num[new_schedule[day]] + int(velocity[i][day])
-                shift_num = max(0, min(shift_num, 3))
+                shift_num = max(0,
+                                min(shift_num, 3))  # Sicherstellen, dass der Schichtwert innerhalb des Bereichs liegt
                 new_schedule[day] = num_to_shift[shift_num]
             new_positions.append(new_schedule)
 
