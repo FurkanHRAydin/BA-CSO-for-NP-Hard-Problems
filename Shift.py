@@ -1,3 +1,4 @@
+
 class Shift:
     def __init__(self, name, min_required):
         self.name = name
@@ -21,3 +22,9 @@ class Shift:
         Löscht die Liste der zugewiesenen Krankenschwestern für einen neuen Tag.
         """
         self.assigned_nurses = []
+
+    def get_current_nurse_count(self):
+        """
+        Gibt die aktuelle Anzahl der Krankenschwestern zurück, die dieser Schicht zugewiesen sind.
+        """
+        return len(self.assigned_nurses)

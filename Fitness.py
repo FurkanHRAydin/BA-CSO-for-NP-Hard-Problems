@@ -1,13 +1,13 @@
 from Nurse import Nurse  # Stelle sicher, dass dies hinzugefügt wird
 
-
 class Fitness:
     @staticmethod
     def calculate_fitness(nurses, shifts, num_days):
         under_staffing_penalty = 100
-        single_assignment_penalty = 50
-        preference_penalty = 20  # Strafpunkte für die Nichtberücksichtigung von Präferenzen
+        preference_penalty = 10  # Strafpunkte für die Nichtberücksichtigung von Präferenzen
         availability_penalty = 50  # Strafpunkte für Zuweisungen außerhalb der Verfügbarkeit
+        consecutive_shift_penalty = 30  # Strafpunkte für zu viele aufeinanderfolgende gleiche Schichten
+        day_off_penalty = 30  # Strafpunkte für fehlende freie Tage
         total_penalty = 0
 
         for day in range(num_days):
@@ -23,18 +23,25 @@ class Fitness:
             for i, nurse in enumerate(nurses):
                 if isinstance(nurse, Nurse):
                     shift_name = nurse.get_shift(day)
+                    prev_shift = nurse.get_shift(day - 1) if day > 0 else None
                 else:
-                    shift_name = nurse[day]  # Hier handelt es sich um einen Schichtplan, kein Nurse-Objekt
+                    shift_name = nurse[day]
+                    prev_shift = nurse[day - 1] if day > 0 else None
 
                 # Überprüfen, ob die Schicht innerhalb der Verfügbarkeit ist
                 if shift_name != 'None' and isinstance(nurse, Nurse) and shift_name not in nurse.availability:
                     total_penalty += availability_penalty
 
+                # Strafe für zu viele aufeinanderfolgende gleiche Schichten
+                if prev_shift == shift_name and shift_name != 'None':
+                    total_penalty += consecutive_shift_penalty
+
                 if shift_name != 'None':
                     for shift in shifts:
                         if shift.name == shift_name:
-                            # Aktualisiere das richtige Dictionary, abhängig davon, ob `nurse` ein Objekt oder eine Liste ist
+                            # Verwende die `assign_shift` Methode, um die Schicht zuzuweisen
                             if isinstance(nurse, Nurse):
+                                nurse.assign_shift(day, shift_name, shifts)
                                 shift.add_nurse(nurse)
                                 nurse_assignment[nurse.name] += 1
 
@@ -49,8 +56,9 @@ class Fitness:
                 if shift.is_understaffed():
                     total_penalty += under_staffing_penalty * (shift.min_required - len(shift.assigned_nurses))
 
-            for nurse_name, assignment_count in nurse_assignment.items():
-                if assignment_count > 1:
-                    total_penalty += single_assignment_penalty * (assignment_count - 1)
+        # Überprüfen, ob jede Krankenschwester mindestens einen freien Tag hat
+        for nurse in nurses:
+            if isinstance(nurse, Nurse) and 'None' not in nurse.schedule:
+                total_penalty += day_off_penalty  # Strafe, wenn kein freier Tag vorhanden ist
 
         return total_penalty
