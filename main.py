@@ -1,26 +1,28 @@
 from Shift import Shift
-from Runner import random_search, plot_fitness
+from Runner import initialize_cats, evaluate_cats, run_multiple_initializations, plot_best_fitness_per_iteration
 
 
 def main():
-    num_cats = 10  # Anzahl der Katzen (dieser Wert wird hier nicht wirklich genutzt)
+    num_cats = 10  # Anzahl der Katzen
     num_days = 7  # Anzahl der Tage
+    num_iterations = 100  # Anzahl der Iterationen
     shifts = [
         Shift('Früh', 1),
         Shift('Spät', 1),
         Shift('Nacht', 1)
     ]
 
-    # Führe eine zufällige Suche durch
-    best_fitness, best_schedule, fitness_history = random_search(num_days, shifts, num_trials=1000)
+    # Führe die Initialisierungen durch und speichere die besten Fitnesswerte in eine Datei
+    best_fitness, best_cat, best_fitness_per_iteration = run_multiple_initializations(
+        num_cats, num_days, shifts, num_iterations, 'best_fitness_log.txt')
 
-    # Gebe das beste gefundene Ergebnis aus
-    print(f"Best fitness found by random search: {best_fitness}")
-    for i, nurse_schedule in enumerate(best_schedule):
-        nurse_name = ['Anna', 'Ben', 'Carla', 'Dave', 'Eva', 'Frank'][i]
-        print(f"{nurse_name}: {nurse_schedule}")
+    # Gebe den besten gefundenen Schichtplan aus
+    print(f"Best fitness found: {best_fitness}")
+    for nurse in best_cat.nurses:
+        print(f"{nurse.name}'s schedule: {nurse.schedule}")
 
-    plot_fitness(fitness_history)
+    # Plotte die beste Fitness jeder Iteration
+    plot_best_fitness_per_iteration(best_fitness_per_iteration)
 
 
 if __name__ == "__main__":
