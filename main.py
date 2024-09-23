@@ -6,7 +6,7 @@ def main():
     num_cats = 10  # Anzahl der "Katzen" im Schwarm
     num_days = 7  # Anzahl der Tage, für die ein Schichtplan erstellt wird
     shifts = [
-        Shift('Früh', 1),  # Frühschicht mit mindestens 1 Krankenschwestern
+        Shift('Früh', 2),  # Frühschicht mit mindestens 2 Krankenschwestern
         Shift('Spät', 1),  # Spätschicht mit mindestens 1 Krankenschwestern
         Shift('Nacht', 1)  # Nachtschicht mit mindestens 1 Krankenschwester
     ]

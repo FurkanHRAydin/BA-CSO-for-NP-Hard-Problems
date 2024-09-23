@@ -6,7 +6,7 @@ class SeekingMode:
     def __init__(self, smp, spc, srd):
         self.smp = smp
         self.spc = spc
-        self.srd = srd
+        self.srd = srd  # Modifikationsrate für Diversität (Exploration)
 
     def create_and_modify_positions(self, nurses):
         """
@@ -17,13 +17,14 @@ class SeekingMode:
             new_nurses = []
             for nurse in nurses:
                 new_schedule = nurse.schedule[:]
-                if random.random() < self.srd:
+                if random.random() < self.srd:  # Höhere SRD für mehr Diversität
                     for i in range(len(new_schedule)):
+                        # Zufällige Änderung der Schichten für mehr Diversität
                         new_schedule[i] = random.choice(['Früh', 'Spät', 'Nacht', 'None'])
                 new_nurses.append(new_schedule)
             modified_positions.append(new_nurses)
 
-        if self.spc:
+        if self.spc:  # Wenn spc=True, füge auch die aktuelle Position zur Modifikation hinzu
             modified_positions.append([nurse.schedule[:] for nurse in nurses])
 
         return modified_positions
