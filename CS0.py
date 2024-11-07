@@ -8,27 +8,35 @@ from Nurse import Nurse
 
 
 class CSO:
-    def __init__(self, num_cats, num_days, shifts, smp, spc, srd, c1, velocity_limit, mr):
+    def __init__(self, num_cats, num_days, shifts, smp, spc, srd, cdc, c1, velocity_limit, mr):
         self.num_cats = num_cats
         self.num_days = num_days
         self.shifts = shifts
 
         benchmark_nurses = [
-            {'name': 'Anna', 'availability': ['Früh', 'Spät', 'Nacht'], 'preferences': ['Früh', 'Spät']},
-            {'name': 'Ben', 'availability': ['Früh', 'Spät'], 'preferences': ['Spät']},
-            {'name': 'Carla', 'availability': ['Früh', 'Nacht'], 'preferences': ['Nacht']},
-            {'name': 'Dave', 'availability': ['Früh', 'Spät', 'Nacht'], 'preferences': ['Spät']},
-            {'name': 'Eva', 'availability': ['Früh', 'Nacht'], 'preferences': ['Nacht']},
-            {'name': 'Frank', 'availability': ['Früh', 'Spät', 'Nacht'], 'preferences': ['Früh']}
+            {'name': 'Anna', 'preferences': ['Früh', 'Spät']},
+            {'name': 'Ben', 'preferences': ['Spät']},
+            {'name': 'Carla', 'preferences': ['Nacht']},
+            {'name': 'Dave', 'preferences': ['Spät']},
+            {'name': 'Eva', 'preferences': ['Nacht']},
+            {'name': 'Frank', 'preferences': ['Früh']},
+            {'name': 'Grace', 'preferences': ['Früh', 'Nacht']},
+            {'name': 'Helen', 'preferences': ['Spät']},
+            {'name': 'Ian', 'preferences': ['Früh']},
+            {'name': 'John', 'preferences': ['Nacht', 'Spät']}
         ]
 
         self.cats = []
         for _ in range(num_cats):
-            nurses = [Nurse(nurse['name'], num_days, nurse['availability'], nurse['preferences'])
+            nurses = [Nurse(nurse['name'], num_days, nurse['preferences'])
                       for nurse in benchmark_nurses]
+            # Hier erfolgt die zufällige Initialisierung der Schichtpläne
+            for nurse in nurses:
+                for day in range(num_days):
+                    nurse.schedule[day] = random.choice(['Früh', 'Spät', 'Nacht', 'None'])
             self.cats.append(Cat(nurses))
 
-        self.seeking_mode = SeekingMode(smp, spc, srd)
+        self.seeking_mode = SeekingMode(smp, spc, srd, cdc)
         self.tracing_mode = TracingMode(c1, velocity_limit)
         self.mr = mr
         self.best_global_fitness = float('inf')
@@ -46,12 +54,23 @@ class CSO:
         iteration_fitness = []
         best_cats_in_iteration = []  # Liste der besten Katzen in der aktuellen Iteration
 
+        # Berechne die Anzahl der Katzen, die im Suchmodus sein sollen
+        num_seeking = int(self.num_cats * self.mr)
+
+        # Zufällige Auswahl von Katzen für den Suchmodus
+        seeking_cats = random.sample(self.cats, num_seeking)
+
         for index, cat in enumerate(self.cats):
-            if random.random() < self.mr:
+            if cat in seeking_cats:
+                # Diese Katze ist im Suchmodus
                 modified_positions = self.seeking_mode.create_and_modify_positions(cat.nurses)
                 fitness_scores = [Fitness.calculate_fitness(pos, self.shifts, self.num_days) for pos in
                                   modified_positions]
-                best_position = modified_positions[fitness_scores.index(min(fitness_scores))]
+                # Wahrscheinlichkeiten zur Auswahl berechnen
+                selection_probabilities = self.seeking_mode.calculate_selection_probabilities(fitness_scores)
+
+                # Stochastische Auswahl einer neuen Position
+                best_position = self.seeking_mode.choose_new_position(modified_positions, selection_probabilities)
                 cat.update_position(best_position)
             else:
                 best_position = self.best_global_position
@@ -111,7 +130,7 @@ class CSO:
         print(f"Best found schedule:")
 
         for i, nurse_schedule in enumerate(self.best_global_position):
-            nurse_name = ['Anna', 'Ben', 'Carla', 'Dave', 'Eva', 'Frank'][i]
+            nurse_name = ['Anna', 'Ben', 'Carla', 'Dave', 'Eva', 'Frank', 'Grace', 'Helen', 'Ian', 'John'][i]
             print(f"{nurse_name}: {nurse_schedule}")
 
         # Zusätzliche Ausgabe zur Überprüfung
@@ -119,16 +138,6 @@ class CSO:
         for nurse_schedule in self.best_global_position:
             print(nurse_schedule)
 
-        # Ausgabe der besten Katzen in der letzten Iteration
-        best_cats_last_iteration = [i + 1 for i, fitness in enumerate(self.cat_fitness_history[-1])
-                                    if fitness == self.best_global_fitness]
-        print(f"\nBest Cats in the Last Iteration: {best_cats_last_iteration}")
-
-    def get_iteration_data(self):
-        """
-        Gibt die gespeicherten Iterationsdaten zurück, um sie später zu verwenden.
-        """
-        return self.best_fitness_per_iteration, self.best_cats_per_iteration
 
     def export_best_cats(self, filename):
         """
@@ -136,7 +145,9 @@ class CSO:
         """
         try:
             with open(filename, 'w') as file:
-                for i, (best_cats, best_fitness, global_fitness) in enumerate(zip(self.best_cats_per_iteration, self.best_fitness_per_iteration, self.global_fitness_history), start=1):
+                for i, (best_cats, best_fitness, global_fitness) in enumerate(
+                        zip(self.best_cats_per_iteration, self.best_fitness_per_iteration, self.global_fitness_history),
+                        start=1):
                     file.write(f"Iteration {i} - Best Fitness: {best_fitness}\n")
                     file.write(f"Best Cats: {best_cats}\n")
                     file.write(f"Global Best Fitness: {global_fitness}\n")

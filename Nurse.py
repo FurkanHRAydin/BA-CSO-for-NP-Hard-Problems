@@ -1,9 +1,8 @@
-import random
+
 class Nurse:
-    def __init__(self, name, num_days, availability, preferences):
+    def __init__(self, name, num_days, preferences):
         self.name = name
         self.schedule = ['None'] * num_days  # Initialisiere den Zeitplan mit 'None' für jeden Tag
-        self.availability = availability
         self.preferences = preferences
 
     def assign_shift(self, day, shift_name, shifts):
@@ -33,13 +32,8 @@ class Nurse:
         elif new_shift_name in self.preferences:
             self.schedule[day] = new_shift_name
 
-        # 3. Wenn keine der Schichten bevorzugt wird, wähle die Schicht, die in der Verfügbarkeit ist.
-        elif new_shift_name in self.availability and current_shift not in self.availability:
-            self.schedule[day] = new_shift_name
-
-        # 4. Falls sowohl die aktuelle Schicht als auch die neue Schicht verfügbar sind,
-        # entscheide basierend auf der geringeren aktuellen Belegung.
-        elif new_shift_name in self.availability and current_shift in self.availability:
+        # 3. Wenn weder die aktuelle Schicht noch die neue bevorzugt wird, wähle die Schicht mit der geringeren Belegung
+        elif current_shift != new_shift_name:
             current_shift_obj = next(shift for shift in shifts if shift.name == current_shift)
             new_shift_obj = next(shift for shift in shifts if shift.name == new_shift_name)
 
@@ -47,7 +41,7 @@ class Nurse:
             if current_shift_obj.get_current_nurse_count() > new_shift_obj.get_current_nurse_count():
                 self.schedule[day] = new_shift_name
 
-        # 5. Wenn keine Verfügbarkeits- oder Präferenzübereinstimmung besteht, behalte die aktuelle Schicht bei.
+        # 5. Wenn keine  Präferenzübereinstimmung besteht, behalte die aktuelle Schicht bei.
         else:
             pass  # Behalte die aktuelle Zuweisung bei, da sie vielleicht trotzdem besser passt.
 
