@@ -1,4 +1,3 @@
-
 class Shift:
     def __init__(self, name, min_required):
         self.name = name

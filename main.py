@@ -7,9 +7,9 @@ def main():
     num_days = 7  # Anzahl der Tage
     num_iterations = 100  # Anzahl der Iterationen
     shifts = [
-        Shift('Früh', 1),
-        Shift('Spät', 1),
-        Shift('Nacht', 1)
+        Shift('Früh', 3),
+        Shift('Spät', 3),
+        Shift('Nacht', 2)
     ]
 
     # Führe die Initialisierungen durch und speichere die besten Fitnesswerte in eine Datei

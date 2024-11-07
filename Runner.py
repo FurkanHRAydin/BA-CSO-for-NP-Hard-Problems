@@ -11,18 +11,22 @@ def initialize_cats(num_cats, num_days):
     Sie bewertet jede Katze mithilfe der Fitnessfunktion.
     """
     benchmark_nurses = [
-        {'name': 'Anna', 'availability': ['Früh', 'Spät', 'Nacht'], 'preferences': ['Früh', 'Spät']},
-        {'name': 'Ben', 'availability': ['Früh', 'Spät'], 'preferences': ['Spät']},
-        {'name': 'Carla', 'availability': ['Früh', 'Nacht'], 'preferences': ['Nacht']},
-        {'name': 'Dave', 'availability': ['Früh', 'Spät', 'Nacht'], 'preferences': ['Spät']},
-        {'name': 'Eva', 'availability': ['Früh', 'Nacht'], 'preferences': ['Nacht']},
-        {'name': 'Frank', 'availability': ['Früh', 'Spät', 'Nacht'], 'preferences': ['Früh']}
+        {'name': 'Anna', 'preferences': ['Früh', 'Spät']},
+        {'name': 'Ben', 'preferences': ['Spät']},
+        {'name': 'Carla', 'preferences': ['Nacht']},
+        {'name': 'Dave', 'preferences': ['Spät']},
+        {'name': 'Eva', 'preferences': ['Nacht']},
+        {'name': 'Frank', 'preferences': ['Früh']},
+        {'name': 'Grace', 'preferences': ['Früh', 'Nacht']},
+        {'name': 'Helen', 'preferences': ['Spät']},
+        {'name': 'Ian', 'preferences': ['Früh']},
+        {'name': 'John', 'preferences': ['Nacht', 'Spät']}
     ]
 
     cats = []  # Liste der Katzen
     for _ in range(num_cats):
         # Initialisiere Krankenschwestern für jede Katze
-        nurses = [Nurse(nurse['name'], num_days, nurse['availability'], nurse['preferences'])
+        nurses = [Nurse(nurse['name'], num_days, nurse['preferences'])
                   for nurse in benchmark_nurses]
 
         # Erzeuge einen zufälligen Schichtplan für jede Krankenschwester

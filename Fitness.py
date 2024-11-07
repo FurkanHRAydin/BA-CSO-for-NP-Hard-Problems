@@ -6,7 +6,6 @@ class Fitness:
     def calculate_fitness(nurses, shifts, num_days):
         under_staffing_penalty = 100
         preference_penalty = 10  # Strafpunkte für die Nichtberücksichtigung von Präferenzen
-        availability_penalty = 50  # Strafpunkte für Zuweisungen außerhalb der Verfügbarkeit
         consecutive_shift_penalty = 30  # Strafpunkte für zu viele aufeinanderfolgende gleiche Schichten
         day_off_penalty = 30  # Strafpunkte für fehlende freie Tage
         total_penalty = 0
@@ -30,9 +29,6 @@ class Fitness:
                     shift_name = nurse[day]  # Falls `nurse` eine Liste ist, arbeite mit den Schichtplänen
                     prev_shift = nurse[day - 1] if day > 0 else None
 
-                # Überprüfen, ob die Schicht innerhalb der Verfügbarkeit ist
-                if shift_name != 'None' and isinstance(nurse, Nurse) and shift_name not in nurse.availability:
-                    total_penalty += availability_penalty
 
                 # Strafe für zu viele aufeinanderfolgende gleiche Schichten
                 if prev_shift == shift_name and shift_name != 'None':
@@ -66,6 +62,8 @@ class Fitness:
 
                     # Fülle die Schicht auf, indem du die verfügbaren Krankenschwestern zuweist
                     shift.fill_shift(available_nurses, day, shifts)
+
+
 
         # Überprüfen, ob jede Krankenschwester mindestens einen freien Tag hat
         for nurse in nurses:
