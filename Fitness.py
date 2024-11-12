@@ -29,26 +29,19 @@ class Fitness:
                     shift_name = nurse[day]  # Falls `nurse` eine Liste ist, arbeite mit den Schichtplänen
                     prev_shift = nurse[day - 1] if day > 0 else None
 
-
                 # Strafe für zu viele aufeinanderfolgende gleiche Schichten
                 if prev_shift == shift_name and shift_name != 'None':
                     total_penalty += consecutive_shift_penalty
 
                 if shift_name != 'None':
+                    # Präferenzstrafe, falls die aktuelle Schicht nicht in den Präferenzen ist
+                    if isinstance(nurse, Nurse) and shift_name not in nurse.preferences:
+                        total_penalty += preference_penalty
+
+                    # Zuweisung der Krankenschwester zu einer Schicht (nur zur Bewertung)
                     for shift in shifts:
                         if shift.name == shift_name:
-                            # Verwende die `assign_shift` Methode, um die Schicht zuzuweisen
-                            if isinstance(nurse, Nurse):
-                                nurse.assign_shift(day, shift_name, shifts)
-                                shift.add_nurse(nurse)
-                                nurse_assignment[nurse.name] += 1
-
-                                # Überprüfen, ob die Schicht den Präferenzen entspricht
-                                if shift_name not in nurse.preferences:
-                                    total_penalty += preference_penalty
-                            else:
-                                shift.add_nurse(None)  # Wir fügen `None` hinzu, da wir kein `Nurse`-Objekt haben
-                                nurse_assignment[f'Nurse{i}'] += 1
+                            shift.assigned_nurses.append(nurse)
 
             for shift in shifts:
                 if shift.is_understaffed():
@@ -62,8 +55,6 @@ class Fitness:
 
                     # Fülle die Schicht auf, indem du die verfügbaren Krankenschwestern zuweist
                     shift.fill_shift(available_nurses, day, shifts)
-
-
 
         # Überprüfen, ob jede Krankenschwester mindestens einen freien Tag hat
         for nurse in nurses:
