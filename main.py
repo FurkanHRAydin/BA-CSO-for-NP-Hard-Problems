@@ -5,7 +5,7 @@ from Runner import initialize_cats, evaluate_cats, run_multiple_initializations,
 def main():
     num_cats = 10  # Anzahl der Katzen
     num_days = 7  # Anzahl der Tage
-    num_iterations = 100  # Anzahl der Iterationen
+    num_iterations = 1000  # Anzahl der Iterationen
     shifts = [
         Shift('Früh', 3),
         Shift('Spät', 3),
