@@ -3,7 +3,7 @@ from Shift import Shift
 
 
 def main():
-    num_cats = 10  # Anzahl der "Katzen" im Schwarm
+    num_cats = 100  # Anzahl der "Katzen" im Schwarm
     num_days = 7  # Anzahl der Tage, für die ein Schichtplan erstellt wird
     shifts = [
         Shift('Früh', 3),  # Frühschicht mit mindestens 2 Krankenschwestern
@@ -14,10 +14,10 @@ def main():
 
     smp = 5  # Anzahl der erzeugten neuen Lösungen im Seeking Mode
     spc = True  # Berücksichtigt die aktuelle Position im Seeking Mode
-    srd = 0.2  # Bereich der Modifikation im Seeking Mode
-    cdc = 2    # Anzahl der Dimensionen, die verändert werden (CDC)
-    c1 = 1.5  # Gewichtung der besten Position im Tracing Mode
-    velocity_limit = 0.2  # Begrenzung der Geschwindigkeit im Tracing Mode
+    srd = 0.3  # Bereich der Modifikation im Seeking Mode
+    cdc = 3    # Anzahl der Dimensionen, die verändert werden (CDC)
+    c1 = 2.0  # Gewichtung der besten Position im Tracing Mode
+    velocity_limit = 0.4  # Begrenzung der Geschwindigkeit im Tracing Mode
     mr = 0.5  # Wechselwahrscheinlichkeit zwischen Seeking und Tracing Mode
 
     # Erstellen und Ausführen des CSO-Algorithmus

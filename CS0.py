@@ -115,10 +115,9 @@ class CSO:
         # Plot für den globalen besten Fitnesswert und den besten Fitnesswert pro Iteration
         plt.figure(figsize=(10, 5))
         plt.plot(range(1, len(self.global_fitness_history) + 1), self.global_fitness_history,
-                 label='Best Global Fitness per Iteration', color='blue')
+                 label='CSO', color='blue')
         plt.xlabel('Iteration')
         plt.ylabel('Fitness')
-        plt.title('Fitness Development Over Iterations')
         plt.legend()
         plt.grid(True)
         plt.xlim(1, len(self.global_fitness_history))
