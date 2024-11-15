@@ -1,4 +1,5 @@
 import random
+import numpy as np
 import matplotlib.pyplot as plt
 from Nurse import Nurse
 from Fitness import Fitness
@@ -94,15 +95,46 @@ def run_multiple_initializations(num_cats, num_days, shifts, num_iterations, fit
     return best_fitness_overall, best_cat_overall, best_fitness_per_iteration
 
 
-def plot_best_fitness_per_iteration(best_fitness_per_iteration):
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_best_fitness_per_iteration(best_fitness_per_iteration, step=20, use_moving_average=False, window_size=20):
     """
-    Plottet die beste Fitness jeder Iteration.
+    Plottet die beste Fitness jeder Iteration:
+    - Zeigt nur jeden `step`-ten Wert für Übersichtlichkeit an.
+    - Optionale Glättung durch gleitenden Durchschnitt.
+
+    Parameter:
+    - best_fitness_per_iteration: Liste der Fitnesswerte pro Iteration
+    - step: Schrittgröße für die Anzeige (z.B. 10 für jede 10. Iteration)
+    - use_moving_average: Bool, ob ein gleitender Durchschnitt verwendet werden soll
+    - window_size: Größe des Fensters für den gleitenden Durchschnitt
     """
     plt.figure(figsize=(10, 5))
-    plt.plot(best_fitness_per_iteration, label='Best Fitness per Iteration', color='blue', marker='o', markersize='2')
+
+    # Option 1: Plotten nur jeder `step`-ten Iteration und den letzten Wert
+    reduced_iterations = list(range(0, len(best_fitness_per_iteration), step))
+    reduced_fitness = [best_fitness_per_iteration[i] for i in reduced_iterations]
+
+    # Sicherstellen, dass der letzte Punkt aufgenommen wird
+    if reduced_iterations[-1] != len(best_fitness_per_iteration) - 1:
+        reduced_iterations.append(len(best_fitness_per_iteration) - 1)
+        reduced_fitness.append(best_fitness_per_iteration[-1])
+
+    # Option 2: Glättung mit gleitendem Durchschnitt
+    if use_moving_average:
+        fitness_smoothed = np.convolve(best_fitness_per_iteration, np.ones(window_size) / window_size, mode='valid')
+        plt.plot(fitness_smoothed, label='Ohne Optimierung (geglättet)', color='red')
+    else:
+        plt.plot(reduced_iterations, reduced_fitness, label='Ohne Optimierung', color='red', marker='o', markersize=2)
+
     plt.xlabel('Iteration')
-    plt.ylabel('Best Fitness')
-    plt.title('Best Fitness Development Over Iterations')
+    plt.ylabel('Fitness')
+
+    # Anzeige nur alle 100 Iterationen auf der x-Achse
+    plt.xticks(range(0, len(best_fitness_per_iteration) + 1, 100))
+
     plt.legend()
     plt.grid(True)
     plt.show()
